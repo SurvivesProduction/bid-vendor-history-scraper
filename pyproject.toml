@@ -1,0 +1,36 @@
+[build-system]
+requires = ["hatchling"]
+build-backend = "hatchling.build"
+
+[project]
+name = "bidscraper"
+version = "0.1.0"
+description = "Generic framework for scraping and normalizing municipal/gov bid-award history into a Postgres-backed vendor history dataset."
+readme = "README.md"
+requires-python = ">=3.11"
+license = "MIT"
+authors = [{ name = "SurvivesProduction" }]
+dependencies = [
+    "pydantic>=2.6,<3",
+    "psycopg[binary]>=3.1,<4",
+    "rapidfuzz>=3.6,<4",
+    "python-dotenv>=1.0,<2",
+]
+
+[project.optional-dependencies]
+dev = [
+    "pytest>=8.0,<9",
+]
+
+[tool.hatch.build.targets.wheel]
+packages = ["src/bidscraper"]
+
+[tool.hatch.build.targets.sdist]
+include = [
+    "src/bidscraper",
+    "README.md",
+    "pyproject.toml",
+]
+
+[tool.pytest.ini_options]
+testpaths = ["tests"]

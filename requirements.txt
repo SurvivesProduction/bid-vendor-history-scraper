@@ -1,0 +1,11 @@
+# Mirrors the dependencies declared in pyproject.toml.
+# Prefer `pip install -e .` (or `pip install -e ".[dev]"` for tests) over
+# this file when working in this repo -- it keeps the package importable
+# and stays in sync with pyproject.toml automatically.
+pydantic>=2.6,<3
+psycopg[binary]>=3.1,<4
+rapidfuzz>=3.6,<4
+python-dotenv>=1.0,<2
+
+# dev/test only
+pytest>=8.0,<9
