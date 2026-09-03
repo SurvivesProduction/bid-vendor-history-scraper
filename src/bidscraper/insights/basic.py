@@ -15,22 +15,28 @@ def vendor_win_counts(
     conn: psycopg.Connection,
     client_id: str,
     source: str | None = None,
-    title_contains: str | None = None,
+    category_keyword: str | None = None,
 ) -> list[dict[str, Any]]:
     """Return vendors ordered by number of bid awards won, descending.
 
     Each result row is `{"awarded_vendor": str, "win_count": int}`.
     Pass `source` to restrict the count to a single data source.
 
-    Pass `title_contains` to scope the count to awards whose
-    `project_title` contains that text (case-insensitive substring
-    match) -- a generic way to break the leaderboard down by category
-    when a source's own titles carry a real, meaningful keyword signal
-    (e.g. a trade name). This module stays client-agnostic: it takes
-    whatever keyword a caller supplies rather than hardcoding any
-    category of its own -- a client-specific category definition (which
-    keyword means what to that client) belongs in that client's own
-    insight code, not here.
+    Pass `category_keyword` to scope the count to awards whose
+    `project_title` OR `awarded_vendor` contains that text
+    (case-insensitive substring match, either field) -- a generic way to
+    break the leaderboard down by category when a source's data carries a
+    real, meaningful keyword signal (e.g. a trade name). Checking BOTH
+    fields matters: a real category can be signaled by the vendor's own
+    name even when the specific project's title doesn't mention the trade
+    at all (e.g. "Stadium Sound System" won by an electrical contractor
+    whose other work is clearly electrical, but whose title alone gives
+    no hint) -- title-only matching silently misses those. This module
+    stays client-agnostic: it takes whatever keyword a caller supplies
+    rather than hardcoding any category of its own -- a client-specific
+    category definition (which keyword means what to that client, and
+    any judgment calls about ambiguous matches) belongs in that client's
+    own insight code, not here.
 
     Rows flagged `needs_review` are excluded -- a row awaiting review
     (whether because of dedup ambiguity or, per a scraper's own
@@ -57,13 +63,17 @@ def vendor_win_counts(
           and ba.awarded_vendor is not null
           and ba.needs_review = false
           and (%(source)s::text is null or ba.source = %(source)s)
-          and (%(title_contains)s::text is null or ba.project_title ilike '%%' || %(title_contains)s || '%%')
+          and (
+            %(category_keyword)s::text is null
+            or ba.project_title ilike '%%' || %(category_keyword)s || '%%'
+            or ba.awarded_vendor ilike '%%' || %(category_keyword)s || '%%'
+          )
         group by coalesce(va.canonical_name, ba.awarded_vendor)
         order by win_count desc, awarded_vendor asc
     """
     with conn.cursor(row_factory=dict_row) as cur:
         cur.execute(
             query,
-            {"client_id": client_id, "source": source, "title_contains": title_contains},
+            {"client_id": client_id, "source": source, "category_keyword": category_keyword},
         )
         return cur.fetchall()
