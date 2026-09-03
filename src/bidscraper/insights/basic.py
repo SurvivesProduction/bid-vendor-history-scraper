@@ -18,12 +18,18 @@ def vendor_win_counts(
 
     Each result row is `{"awarded_vendor": str, "win_count": int}`.
     Pass `source` to restrict the count to a single data source.
+
+    Rows flagged `needs_review` are excluded -- a row awaiting review
+    (whether because of dedup ambiguity or, per a scraper's own
+    judgment, because the source document didn't clearly identify a
+    vendor) shouldn't count as a confirmed win until it's resolved.
     """
     query = """
         select awarded_vendor, count(*) as win_count
         from bid_awards
         where client_id = %(client_id)s
           and awarded_vendor is not null
+          and needs_review = false
           and (%(source)s::text is null or source = %(source)s)
         group by awarded_vendor
         order by win_count desc, awarded_vendor asc

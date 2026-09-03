@@ -6,6 +6,7 @@ pydantic>=2.6,<3
 psycopg[binary]>=3.1,<4
 rapidfuzz>=3.6,<4
 python-dotenv>=1.0,<2
+truststore>=0.9,<1
 
 # dev/test only
 pytest>=8.0,<9
