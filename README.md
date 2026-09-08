@@ -4,6 +4,8 @@ Public template: scrapes municipal bid-award history to show which vendors keep 
 
 This is the generic/free version -- no client-specific targets, normalization, or alerting. See the full build for a real client deployment.
 
+**Deployment note:** this repo also exists as a second clone on the deployment machine (under `Desktop\SurvivesProduction-001\...\tool1-bid-vendor-scraper\bid-vendor-history-scraper`), installed editable into the deploy venv the scheduled job uses. GitHub is the single source of truth -- that copy must only be updated via `git pull`, never edited directly. See `bid-vendor-history-scraper-full`'s README for the full deployment picture.
+
 ## What this is
 
 `bidscraper` is a small, reusable framework for turning "a government bid/award portal" into normalized rows in Postgres:
