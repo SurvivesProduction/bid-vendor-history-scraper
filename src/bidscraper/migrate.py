@@ -50,6 +50,11 @@ def run_migrations(dsn: str | None = None) -> None:
 
 
 def main() -> int:
+    # This only ever searches THIS package's own directory tree for a
+    # .env (see bidscraper.config's load_dotenv() comment for why) -- it
+    # will NOT find a downstream "full" repo's .env. A downstream repo's
+    # own scripts/migrate.py must call load_dotenv() itself before
+    # calling this main(), or DATABASE_URL must already be exported.
     load_dotenv()
     try:
         run_migrations()

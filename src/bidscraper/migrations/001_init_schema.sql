@@ -10,6 +10,15 @@ create table if not exists bid_awards (
     client_id text not null,
     source text not null,
     source_record_id text,
+    -- record_key/dedup_method/match_confidence/needs_review are computed
+    -- by bidscraper.db.client.upsert_bid_award, never set by a scraper --
+    -- see that module's docstring for the full 3-tier dedup strategy.
+    -- needs_review has no separate "reason" column here (unlike Tool
+    -- 2/3's needs_review/review_reason pairs) because the reason is
+    -- always the same one thing: a fuzzy-match score landed in the
+    -- "plausible but not confident" band -- match_confidence already
+    -- records exactly that score, so a redundant free-text reason isn't
+    -- needed for this table.
     record_key text not null,
     dedup_method text not null,
     match_confidence numeric,

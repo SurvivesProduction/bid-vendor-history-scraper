@@ -12,6 +12,18 @@ from dataclasses import dataclass
 
 from dotenv import load_dotenv
 
+# NOTE: load_dotenv() with no path argument walks UP from THIS file's own
+# directory (this installed package's location), not from the caller's
+# directory or the process cwd. That means this call only ever finds a
+# .env sitting in bidscraper's own source tree -- it does NOT find a
+# downstream "full" deployment repo's .env, even though that's almost
+# always where the real .env actually lives. Each entry point that needs
+# real credentials (scripts/run_client.py, scripts/migrate.py in the
+# "full" repos) must call load_dotenv() again, itself, from a file that
+# actually lives inside that repo. Discovered the hard way in
+# scripts/migrate.py (see that file's own "full" repo for the story) --
+# don't remove downstream load_dotenv() calls that look "redundant" with
+# this one; they're not.
 load_dotenv()
 
 

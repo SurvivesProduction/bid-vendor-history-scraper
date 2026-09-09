@@ -41,7 +41,7 @@ cp .env.example .env
 python scripts/migrate.py
 ```
 
-This applies every SQL file under `src/bidscraper/migrations/` (currently just `001_init_schema.sql`, which creates `bid_awards` and `digest_runs`) in order. Every migration is written with `if not exists` guards, so it's safe to rerun.
+This applies every SQL file under `src/bidscraper/migrations/` in order: `001_init_schema.sql` (creates `bid_awards` and `digest_runs`) and `002_vendor_aliases.sql` (creates `vendor_aliases`, used for vendor-name canonicalization -- see below). Every migration is written with `if not exists` guards, so it's safe to rerun.
 
 ## Run the demo scraper
 
@@ -62,7 +62,8 @@ This package defines the extension points a real deployment overlays:
   2. No exact match, but a fuzzy match (`rapidfuzz` similarity on title + vendor, within a small award-date window) with confidence >= 0.90 -- merges into that row (`dedup_method='fuzzy_merge'`).
   3. Fuzzy match with confidence between 0.75 and 0.90 -- inserted as a new row flagged `needs_review=true` for a human to confirm.
   4. Otherwise -- inserted as a genuinely new row.
-- **`bidscraper.insights.basic.vendor_win_counts`** -- a generic starting point for insight queries over the shared schema.
+- **`bidscraper.insights.basic.vendor_win_counts`** -- a generic starting point for insight queries over the shared schema. Optional `source`/`category_keyword` filters narrow the leaderboard; excludes `needs_review` rows; groups by canonical vendor name when one is known (see below), falling back to the raw string otherwise.
+- **`bidscraper.normalize.vendor_alias` / `bidscraper.db.vendor_aliases`** -- vendor-name canonicalization, using the same pure-scoring/banding pattern as the bid-record dedup logic above, applied to vendor names instead of whole records. The same real vendor often appears under several spellings across source documents ("CT Electric Corp" / "CT Electric Corp." / "C. T. Electrical Corp"); `resolve_vendor_alias`/`backfill_vendor_aliases` populate the `vendor_aliases` table that `vendor_win_counts` groups by, so those spellings count as one vendor instead of three.
 
 A downstream deployment (like the full/paid repo) adds concrete scraper subclasses for real portals, a client-specific config (`client_id`, targets), and any alerting/digest logic on top -- without needing to touch or fork this package's code.
 
@@ -73,4 +74,4 @@ pip install -e ".[dev]"
 pytest
 ```
 
-Covers `compute_record_key` (native-id vs. hash paths), `BidAward` validation, and the fuzzy-match confidence banding logic (the pure scoring/classification functions are factored out of the DB query so they're testable without a live database).
+Covers `compute_record_key` (native-id vs. hash paths), `BidAward` validation, the fuzzy-match confidence banding logic, and the vendor-alias matching/banding logic (both are pure scoring/classification functions factored out of their DB queries so they're testable without a live database).
